@@ -1,4 +1,7 @@
-const BASE = "http://localhost:4000/api";
+// Relative path works both in dev (proxied to localhost:4000 by Vite,
+// see vite.config.ts) and in production (served by the same Express
+// process that serves this build).
+const BASE = "/api";
 
 export type Deal = {
   id: number;

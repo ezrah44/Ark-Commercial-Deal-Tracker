@@ -2,10 +2,14 @@ import express from "express";
 import cors from "cors";
 import Database from "better-sqlite3";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const db = new Database(path.join(__dirname, "dashboard.db"));
+// DB_PATH lets a host with a persistent volume (e.g. Railway) point the
+// SQLite file at mounted, durable storage instead of the app's own disk.
+const dbPath = process.env.DB_PATH || path.join(__dirname, "dashboard.db");
+const db = new Database(dbPath);
 
 // Commission rule: if ad spend per closed deal (at the moment this deal
 // closed) is under $2,000, commission is $1,000. At or above, it's $500.
@@ -149,6 +153,17 @@ app.get("/api/summary", (req, res) => {
   const costPerDeal = totalDeals > 0 ? totalSpend / totalDeals : 0;
   res.json({ totalSpend, totalDeals, costPerDeal });
 });
+
+// In production, serve the built client so this one process is the whole
+// app — no separate frontend host needed. In dev, Vite's own server (with
+// the /api proxy in vite.config.ts) handles the frontend instead.
+const clientDist = path.join(__dirname, "..", "client", "dist");
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
