@@ -1,7 +1,7 @@
-// Relative path works both in dev (proxied to localhost:4000 by Vite,
-// see vite.config.ts) and in production (served by the same Express
-// process that serves this build).
-const BASE = "/api";
+// This app is fully static — there is no server. All data is read from
+// and written to this browser's localStorage (see localDb.ts). The `api`
+// object below keeps an async interface so the rest of the app doesn't
+// need to know the difference.
 
 export type Deal = {
   id: number;
@@ -31,31 +31,24 @@ export type Summary = {
   costPerDeal: number;
 };
 
-async function req<T>(path: string, opts?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...opts,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `Request failed: ${res.status}`);
-  }
-  if (res.status === 204) return undefined as T;
-  return res.json();
-}
+// Imported lazily-ish via re-export to avoid a circular import at module
+// load time (localDb.ts imports these types from this file).
+import { localDb } from "./localDb";
 
 export const api = {
-  getDeals: () => req<Deal[]>("/deals"),
-  addDeal: (d: { contact_name: string; business_name: string; closed_date: string; notes: string }) =>
-    req<Deal>("/deals", { method: "POST", body: JSON.stringify(d) }),
-  updateDeal: (id: number, d: { contact_name: string; business_name: string; closed_date: string; notes: string }) =>
-    req<Deal>(`/deals/${id}`, { method: "PUT", body: JSON.stringify(d) }),
-  deleteDeal: (id: number) => req<void>(`/deals/${id}`, { method: "DELETE" }),
+  getDeals: async () => localDb.getDeals(),
+  addDeal: async (d: { contact_name: string; business_name: string; closed_date: string; notes: string }) =>
+    localDb.addDeal(d),
+  updateDeal: async (
+    id: number,
+    d: { contact_name: string; business_name: string; closed_date: string; notes: string }
+  ) => localDb.updateDeal(id, d),
+  deleteDeal: async (id: number) => localDb.deleteDeal(id),
 
-  getAdSpend: () => req<AdSpend[]>("/adspend"),
-  addAdSpend: (s: Omit<AdSpend, "id" | "created_at">) =>
-    req<AdSpend>("/adspend", { method: "POST", body: JSON.stringify(s) }),
-  deleteAdSpend: (id: number) => req<void>(`/adspend/${id}`, { method: "DELETE" }),
+  getAdSpend: async () => localDb.getAdSpend(),
+  addAdSpend: async (s: { amount: number; period_label: string; spend_date: string; notes: string }) =>
+    localDb.addAdSpend(s),
+  deleteAdSpend: async (id: number) => localDb.deleteAdSpend(id),
 
-  getSummary: () => req<Summary>("/summary"),
+  getSummary: async () => localDb.getSummary(),
 };

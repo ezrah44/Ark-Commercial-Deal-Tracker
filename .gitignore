@@ -1,4 +1,3 @@
 node_modules/
 dist/
-server/dashboard.db
 .DS_Store

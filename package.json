@@ -1,15 +1,10 @@
 {
-  "name": "commercial-deal-dashboard",
+  "name": "ark-commercial-deal-tracker",
   "private": true,
   "scripts": {
-    "install:all": "npm install --prefix server && npm install --prefix client",
-    "server": "npm run start --prefix server",
-    "client": "npm run dev --prefix client",
-    "dev": "npx concurrently -n server,client -c green,cyan \"npm run server\" \"npm run client\"",
-    "build": "npm install --prefix client && npm run build --prefix client && npm install --prefix server",
-    "start": "npm run start --prefix server"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.0"
+    "install:all": "npm install --prefix client",
+    "dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "deploy": "npm run deploy --prefix client"
   }
 }

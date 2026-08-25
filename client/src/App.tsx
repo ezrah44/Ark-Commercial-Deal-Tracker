@@ -31,7 +31,7 @@ export default function App() {
       setDeals(d);
       setError(null);
     } catch {
-      setError("Can't reach the server. Is it running on port 4000?");
+      setError("Couldn't load your saved data from this browser.");
     } finally {
       setLoading(false);
     }
